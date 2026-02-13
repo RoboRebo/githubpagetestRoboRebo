@@ -34,6 +34,9 @@
       max-height: 500px;
       overflow: hidden;
       transition: max-height 2s ease-in-out;
+
+      /* CLAVE: para que los botones absolutos se anclen al cuadro */
+      position: relative;
     }
 
     .cuadrado.expandido {
@@ -61,6 +64,7 @@
       opacity: 1;
       transform: translateY(0);
       transition: opacity 1.5s ease, transform 1.5s ease;
+      margin-top: 20px;
     }
 
     .contenido img {
@@ -95,46 +99,63 @@
       100% { transform: scale(1); }
     }
 
-    /* BOTONES PRINCIPALES */
-    #boton, #boton2 {
+    /* CONTENEDOR DE BOTONES (dentro del cuadro) */
+    .zona-botones {
       position: absolute;
-      width: 80px;
+      left: 50%;
+      top: 72%;                 /* ajusta si quieres más arriba/abajo */
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 60px;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    /* Botones principales */
+    #boton, #boton2 {
+      width: 90px;
       padding: 15px 25px;
       font-size: 16px;
       cursor: pointer;
       border: none;
       border-radius: 32px;
       font-weight: bold;
-      z-index: 9999;
-      transition: left 0.8s ease, top 0.8s ease, transform 0.3s ease;
+      transition: transform 0.3s ease;
     }
 
     #boton {
-      left: 700px;
-      top: 450px;
       background-color: red;
       color: white;
       box-shadow: 0px 2.5px 30px grey;
     }
 
     #boton2 {
-      left: 500px;
-      top: 450px;
       background-color: gray;
       color: white;
       box-shadow: 0px 2.5px 20px grey;
     }
 
-    /* TEXTO PEQUEÑO */
+    /* Nota debajo de los botones */
     .nota {
       position: absolute;
-      top: 520px;
       left: 50%;
+      top: calc(72% + 60px);    /* debajo de la zona de botones */
       transform: translateX(-50%);
       font-size: 12px;
       color: #5a0033;
       font-style: italic;
       text-align: center;
+      z-index: 9999;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    /* En pantallas chicas, reducimos espacio entre botones */
+    @media (max-width: 480px) {
+      .zona-botones { gap: 24px; }
+      .texto { font-size: 26px; }
+      .main-gif { width: 140px; }
     }
   </style>
 </head>
@@ -148,21 +169,23 @@
       alt="Imagen">
 
     <div id="contenidoSi" class="contenido oculto">
-      <p>LET'S GOOOOOOOOOOO</p>
-
+      <p>LET'S GOOOOOOOOOOO 🎉</p>
       <img src="https://media.tenor.com/l8OlCfng1zIAAAAM/i-love-u.gif" alt="imagen2">
 
       <button class="boton-carta" onclick="window.location.href='si.html'">
         💌
       </button>
     </div>
-  </div>
 
-  <button id="boton">No</button>
-  <button id="boton2">Sí</button>
+    <!-- Botones dentro del cuadro -->
+    <div class="zona-botones" id="zonaBotones">
+      <button id="boton2">Sí</button>
+      <button id="boton">No</button>
+    </div>
 
-  <div class="nota">
-    el "no" puede ser un poco tímido 😈
+    <div class="nota" id="nota">
+      el "no" puede ser un poco tímido 😈
+    </div>
   </div>
 
   <script>
@@ -170,20 +193,33 @@
     const botonSi = document.getElementById("boton2");
     const cuadro = document.getElementById("cuadro");
     const contenidoSi = document.getElementById("contenidoSi");
-    const nota = document.querySelector(".nota");
+    const nota = document.getElementById("nota");
+    const zonaBotones = document.getElementById("zonaBotones");
 
     let escalaSi = 1;
 
+    // Hacer que "No" huya pero SIN salirse del cuadro
     botonNo.addEventListener("mouseenter", () => {
-      const maxX = window.innerWidth - botonNo.offsetWidth;
-      const maxY = window.innerHeight - botonNo.offsetHeight;
+      const rectZona = zonaBotones.getBoundingClientRect();
+      const rectCuadro = cuadro.getBoundingClientRect();
 
-      const x = Math.random() * maxX;
-      const y = Math.random() * maxY;
+      // límites dentro del cuadro (con margen)
+      const margen = 20;
+      const minX = margen;
+      const maxX = rectCuadro.width - botonNo.offsetWidth - margen;
+      const minY = margen;
+      const maxY = rectCuadro.height - botonNo.offsetHeight - margen;
 
+      // posición aleatoria RELATIVA al cuadro
+      const x = Math.random() * (maxX - minX) + minX;
+      const y = Math.random() * (maxY - minY) + minY;
+
+      // Convertimos el botón "No" a absoluto dentro del cuadro al primer salto
+      botonNo.style.position = "absolute";
       botonNo.style.left = `${x}px`;
       botonNo.style.top = `${y}px`;
 
+      // Crece botón Sí
       escalaSi += 0.2;
       botonSi.style.transform = `scale(${escalaSi})`;
     });
@@ -192,9 +228,8 @@
       contenidoSi.classList.remove("oculto");
       cuadro.classList.add("expandido");
 
-      botonNo.style.display = "none";
-      botonSi.style.display = "none";
-      nota.style.display = "none"; // desaparece junto con los botones
+      zonaBotones.style.display = "none";
+      nota.style.display = "none";
     });
   </script>
 
